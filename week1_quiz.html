@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Week 1 Quiz</title>
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --background-color: #ecf0f1;
+      --card-color: #ffffff;
+      --accent-color: #3498db;
+      --correct-color: #27ae60;
+      --wrong-color: #c0392b;
+    }
+    body {
+      background: var(--background-color);
+      color: var(--primary-color);
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 700px;
+      margin: 2rem auto;
+      background: var(--card-color);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .progress {
+      text-align: right;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+    .question {
+      margin-bottom: 1.5rem;
+    }
+    .options {
+      list-style: none;
+      padding: 0;
+    }
+    .options li {
+      margin: 0.75rem 0;
+    }
+    button {
+      background: var(--accent-color);
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1.25rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    #feedback {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    #score {
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Week 1 Quiz</h1>
+    <div class="progress" id="progress"></div>
+    <div id="quiz-container"></div>
+  </div>
+  <script>
+    const pool = [
+      { text: "Which metric typically has the strongest correlation with page load time?", options: ["Total bytes downloaded", "Number of object requests", "Number of servers contacted", "Number of CSS files"], answer: 1, explanation: "Each HTTP request adds latency and overhead, making object count highly predictive of load time." },
+      { text: "What is a 'third-party origin'?", options: ["Your own server", "Any domain not matching your site's domain", "A CDN you control", "Your browser's cache"], answer: 1, explanation: "A third-party origin serves resources from a different domain than your site." },
+      { text: "Synthetic tests are characterized by:", options: ["Collecting real user data", "Emulated network/browser conditions in lab", "Logging production errors", "Analyzing third-party scripts"], answer: 1, explanation: "Synthetic tests run in controlled environments to measure performance under set conditions." },
+      { text: "Real User Monitoring (RUM) refers to:", options: ["Lab-based emulation", "Simulated traffic", "Collecting performance data from actual user sessions", "Static code analysis"], answer: 2, explanation: "RUM captures metrics from real users in production environments." },
+      { text: "HTTP/2 multiplexing allows:", options: ["Multiple connections per resource", "Parallel requests over a single TCP connection", "Prioritizing CSS over JS", "Encrypting images"], answer: 1, explanation: "Multiplexing sends multiple streams concurrently on one connection, reducing latency." },
+      { text: "Minification in web development refers to:", options: ["Compressing images", "Removing whitespace/comments from code", "Bundling modules", "Encrypting JavaScript"], answer: 1, explanation: "Minification strips unnecessary characters to reduce file size." },
+      { text: "The 'critical rendering path' is:", options: ["Sequence from HTML to page paint", "Order of DNS lookups", "List of HTTP headers", "Network handshake steps"], answer: 0, explanation: "It describes steps the browser takes to convert HTML/CSS/JS to pixels on screen." },
+      { text: "Which hint tag tells the browser to preload a resource?", options: ["&lt;link rel=\"preload\" href=...&gt;", "&lt;meta http-equiv=\"preload\"&gt;", "&lt;script defer&gt;", "&lt;link rel=\"dns-prefetch\"&gt;"], answer: 0, explanation: "&lt;link rel='preload'&gt; instructs the browser to fetch a resource early." },
+      { text: "WPO stands for:", options: ["Web Protocol Optimization", "Web Performance Optimization", "Web Page Objects", "Wideband Performance Ops"], answer: 1, explanation: "WPO refers to techniques and practices to speed up web pages." },
+      { text: "Which tool is NOT a module bundler?", options: ["Browserify", "Webpack", "Babel", "RequireJS"], answer: 2, explanation: "Babel is a transpiler, not a bundler." },
+      { text: "TTFB measures:", options: ["Time to First Byte", "Total Transfer File Bytes", "Time to Full Browser Load", "Total Third-party File Blocks"], answer: 0, explanation: "Time to First Byte is the duration until the first byte is received from server." },
+      { text: "FCP stands for:", options: ["First Contentful Paint", "Full Contentful Paint", "First Consistent Paint", "Fetch Content Protocol"], answer: 0, explanation: "First Contentful Paint marks when the first text/image is painted." },
+      { text: "CLS is the metric for:", options: ["Cumulative Layout Shift", "Client Load Speed", "Content Linting Score", "Cached Load State"], answer: 0, explanation: "CLS quantifies unexpected layout shifts during page load." },
+      { text: "To set an expiration on cached resources, use which header?", options: ["Cache-Control: max-age", "Expires-Resource", "Cache-Timeout", "Age-Control"], answer: 0, explanation: "Cache-Control with max-age defines how long a resource is fresh." },
+      { text: "JSON stands for:", options: ["Java Symbolic Object Notation", "JavaScript Object Notation", "Java Standard Output Name", "JPEG Simple Object Note"], answer: 1, explanation: "JSON is JavaScript Object Notation, a lightweight data format." },
+      { text: "REST stands for:", options: ["Representational State Transfer", "Real-time Event Stream Technology", "Resource Standard Text", "Rapid Service Transport"], answer: 0, explanation: "REST is an architectural style for networked applications." },
+      { text: "The &lt;meta charset=\"UTF-8\"&gt; tag specifies:", options: ["Document's character encoding", "Cache expiration", "Viewport settings", "Server charset negotiation"], answer: 0, explanation: "It declares the character encoding used in the document." },
+      { text: "For best performance, script tags are often placed:", options: ["In the document &lt;head&gt;", "At end of the &lt;body&gt;", "Inside &lt;meta&gt; tags", "Before &lt;!DOCTYPE&gt;"], answer: 1, explanation: "Placing scripts at the end prevents blocking HTML parsing." },
+      { text: "Which CSS selector targets all &lt;p&gt; inside .container?", options: [".container p", "p .container", "#container &gt; p", ".container &gt; p"], answer: 0, explanation: ".container p selects any &lt;p&gt; descendant of .container." },
+      { text: "Which &lt;script&gt; attribute loads JS without blocking HTML parsing but executes as soon as it's downloaded?", options: ["async", "defer", "module", "nomodule"], answer: 0, explanation: "'async' downloads script asynchronously and executes it immediately upon arrival, not waiting for HTML parsing." },
+      { text: "Which resource hint instructs the browser to perform DNS resolution for a domain?", options: ["&lt;link rel=\"dns-prefetch\"&gt;", "&lt;link rel=\"preload\"&gt;", "&lt;link rel=\"prefetch\"&gt;", "&lt;link rel=\"preconnect\"&gt;"], answer: 0, explanation: "'dns-prefetch' tells the browser to resolve DNS for a domain early." },
+      { text: "ETag headers are used for:", options: ["Compressing responses", "Cache validation", "Security tokens", "Content encryption"], answer: 1, explanation: "ETags let clients validate cached resources and fetch updated content when necessary." },
+      { text: "Which HTTP status code indicates a permanent redirect?", options: ["302", "301", "304", "307"], answer: 1, explanation: "301 means Moved Permanently." },
+      { text: "What is the default character encoding in HTML5?", options: ["ISO-8859-1", "UTF-8", "ASCII", "UTF-16"], answer: 1, explanation: "UTF-8 is the default encoding for HTML5 documents." }
+    ];
+
+    function shuffle(array) {
+      let current = array.length, temp, random;
+      while (current) {
+        random = Math.floor(Math.random() * current);
+        current--;
+        temp = array[current];
+        array[current] = array[random];
+        array[random] = temp;
+      }
+      return array;
+    }
+
+    const selected = shuffle(pool.slice()).slice(0, 20);
+    let currentIndex = 0, score = 0;
+    const container = document.getElementById('quiz-container');
+    const progressEl = document.getElementById('progress');
+
+    function showProgress() {
+      progressEl.textContent = `Question ${currentIndex + 1} of ${selected.length}`;
+    }
+
+    function showQuestion() {
+      showProgress();
+      const q = selected[currentIndex];
+      container.innerHTML = `
+        <div class="question">
+          <p><strong>${q.text}</strong></p>
+          <ul class="options">
+            ${q.options.map((opt,i) => `<li><label><input type=\"radio\" name=\"opt\" value=\"${i}\"> ${opt}</label></li>`).join('')}
+          </ul>
+          <button id="submitBtn">Submit</button>
+          <div id="feedback"></div>
+        </div>
+      `;
+      document.getElementById('submitBtn').onclick = checkAnswer;
+    }
+
+    function checkAnswer() {
+      const sel = document.querySelector('input[name="opt"]:checked');
+      if (!sel) return;
+      const q = selected[currentIndex];
+      const fb = document.getElementById('feedback');
+      if (parseInt(sel.value) === q.answer) {
+        score++;
+        fb.innerHTML = `<p style=\"color: var(--correct-color);\">Correct! ${q.explanation}</p>`;
+      } else {
+        fb.innerHTML = `<p style=\"color: var(--wrong-color);\">Wrong. ${q.explanation}</p>`;
+      }
+      const btn = document.getElementById('submitBtn');
+      btn.textContent = currentIndex < selected.length - 1 ? 'Next' : 'Finish';
+      btn.onclick = nextQuestion;
+    }
+
+    function nextQuestion() {
+      currentIndex++;
+      if (currentIndex < selected.length) {
+        showQuestion();
+      } else {
+        container.innerHTML = `<div id=\"score\">Your score: ${score} / ${selected.length}</div>`;
+        progressEl.textContent = '';
+      }
+    }
+
+    showQuestion();
+  </script>
+</body>
+</html>
+
