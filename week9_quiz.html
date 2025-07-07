@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Week 9 Quiz - Deployment & FAQ</title>
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --background-color: #ecf0f1;
+      --card-color: #ffffff;
+      --accent-color: #2980b9;
+      --correct-color: #27ae60;
+      --wrong-color: #c0392b;
+    }
+    body {
+      background: var(--background-color);
+      color: var(--primary-color);
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 700px;
+      margin: 2rem auto;
+      background: var(--card-color);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 { text-align: center; margin-bottom: 1rem; }
+    .progress { text-align: right; font-size: 0.9rem; margin-bottom: 1rem; }
+    .question { margin-bottom: 1.5rem; }
+    .options { list-style: none; padding: 0; }
+    .options li { margin: 0.75rem 0; }
+    button {
+      background: var(--accent-color);
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1.25rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover { background: #1f6391; }
+    #feedback { margin-top: 1rem; font-weight: bold; }
+    #score { text-align: center; font-size: 1.2rem; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Week 9 Quiz</h1>
+    <div class="progress" id="progress"></div>
+    <div id="quiz-container"></div>
+  </div>
+  <script>
+    const pool = [
+      { text: "What does OWASP stand for?", options: ["Open Web Application Security Project", "Online Web App Security Platform", "Open Web Analytics System", "Operational Web Application Security Protocol"], answer: 0, explanation: "OWASP is the Open Web Application Security Project, focused on improving web security." },
+      { text: "The OWASP Top Ten is a list of the most critical:", options: ["Web frameworks", "Web application security risks", "HTTP headers", "JavaScript libraries"], answer: 1, explanation: "OWASP Top Ten lists the top security risks for web applications." },
+      { text: "Black-box testing often fingerprints frameworks via:", options: ["HTTP headers", "Source code compilation", "Live debugging", "User logs"], answer: 0, explanation: "Analyzing HTTP headers can reveal server and framework information." },
+      { text: "Which HTTP header reveals server software version?", options: ["Server", "Host", "Accept", "User-Agent"], answer: 0, explanation: "The Server header shows web server software and version." },
+      { text: "Which header is commonly used for framework fingerprinting?", options: ["X-Powered-By", "Content-Type", "Cache-Control", "Set-Cookie"], answer: 0, explanation: "X-Powered-By often indicates the underlying framework." },
+      { text: "Framework-specific cookies can hint at technology. A Laravel cookie might be named:", options: ["APP_LEY", "SESSIONID", "CSRF-TOKEN", "JSESSIONID"], answer: 0, explanation: "Laravel sets cookies like APP_LEY (APP_KEY) to manage sessions." },
+      { text: "Which folder path indicates a WordPress site?", options: ["/wp-content/", "/laravel/", "/static/", "/media/"], answer: 0, explanation: "/wp-content/ is unique to WordPress directory structure." },
+      { text: "A .aspx extension indicates:", options: ["PHP application", "Java servlet", "ASP.NET application", "Static HTML"], answer: 2, explanation: ".aspx files are served by ASP.NET applications." },
+      { text: "The Linux command to recursively list file permissions is:", options: ["ls -lR", "chmod -R", "namei -l", "stat -r"], answer: 2, explanation: "namei -l shows recursive permissions for each path component." },
+      { text: "To test read access on cloud storage, use curl with method:", options: ["GET", "POST", "PUT", "DELETE"], answer: 0, explanation: "GET retrieves an object from storage." },
+      { text: "To test write access on cloud storage, use curl with method:", options: ["GET", "POST", "PUT", "DELETE"], answer: 2, explanation: "PUT uploads or replaces an object in storage." },
+      { text: "Which technique defers loading images until needed?", options: ["Minification", "Lazy loading", "Multiplexing", "Caching"], answer: 1, explanation: "Lazy loading loads resources when they enter the viewport." },
+      { text: "What does CODE SPLITTING achieve?", options: ["Compresses CSS files", "Splits JS bundles for faster initial load", "Inlines HTML", "Merges images"], answer: 1, explanation: "Code splitting breaks bundles so only needed code loads first." },
+      { text: "Using async and defer on &lt;script&gt; tags prevents:", options: ["Network errors", "Blocking HTML parsing", "Cookie theft", "Cache expiration"], answer: 1, explanation: "Async/defer allow HTML parsing without blocking by scripts." },
+      { text: "Which compression methods reduce file sizes?", options: ["Gzip and Brotli", "SSL and TLS", "DNS and Prefetch", "GET and POST"], answer: 0, explanation: "Gzip and Brotli compress resources to decrease payload size." },
+      { text: "A CDN is best described as:", options: ["Client Development IDE", "Content Delivery Network", "Central Data Node", "Code Debugger Namespace"], answer: 1, explanation: "CDN serves assets from geographically distributed nodes." },
+      { text: "Content Security Policy (CSP) headers mitigate:", options: ["SQL injection", "XSS attacks", "CSRF", "DDoS"], answer: 1, explanation: "CSP restricts sources of scripts to prevent XSS." },
+      { text: "CSRF tokens primarily protect against:", options: ["XSS", "CSRF", "SQL injection", "Session fixation"], answer: 1, explanation: "CSRF tokens verify request origin to block cross-site forgery." },
+      { text: "SameSite cookies help prevent:", options: ["XSS", "CSRF", "Brute-force login", "Data leaks"], answer: 1, explanation: "SameSite restricts cross-site cookie sending, preventing CSRF." },
+      { text: "Microservices architectures allow:", options: ["Single deployable unit", "Independent scaling of components", "Simplified deployment only", "No network overhead"], answer: 1, explanation: "Microservices scale each service independently for flexibility." },
+      { text: "A disadvantage of monolithic apps is:", options: ["Complex infrastructure", "Single point of failure", "Excessive modularity", "Multiple deployment units"], answer: 1, explanation: "Monoliths are one deployable unit; failure can affect all." },
+      { text: "Which database optimization splits tables or data?", options: ["Indexing", "Partitioning", "Denormalization", "Replication"], answer: 1, explanation: "Partitioning divides large tables into manageable segments." },
+      { text: "Caching frequent queries can use:", options: ["Redis or Memcached", "Gzip or Brotli", "npm or yarn", "HTTP/2 only"], answer: 0, explanation: "In-memory stores like Redis cache DB results for speed." },
+      { text: "MVCC concurrency control is a feature of:", options: ["SQLite", "MongoDB", "PostgreSQL", "MyISAM"], answer: 2, explanation: "PostgreSQL uses MVCC to manage concurrent transactions." },
+      { text: "Connection pooling improves:", options: ["Response caching", "Concurrent DB access and latency", "Cookie security", "Template rendering"], answer: 1, explanation: "Pooling reuses DB connections for efficient concurrent access." }
+    ];
+
+    function shuffle(arr) {
+      let n = arr.length, temp, idx;
+      while (n) {
+        idx = Math.floor(Math.random() * n--);
+        temp = arr[n];
+        arr[n] = arr[idx];
+        arr[idx] = temp;
+      }
+      return arr;
+    }
+
+    const selected = shuffle(pool.slice()).slice(0, 20);
+    let currentIndex = 0, score = 0;
+    const container = document.getElementById('quiz-container');
+    const progressEl = document.getElementById('progress');
+
+    function showProgress() {
+      progressEl.textContent = `Question ${currentIndex + 1} of ${selected.length}`;
+    }
+
+    function showQuestion() {
+      showProgress();
+      const q = selected[currentIndex];
+      container.innerHTML = `
+        <div class="question">
+          <p><strong>${q.text}</strong></p>
+          <ul class="options">
+            ${q.options.map((opt, i) => `<li><label><input type="radio" name="opt" value="${i}"> ${opt}</label></li>`).join('')}
+          </ul>
+          <button id="submitBtn">Submit</button>
+          <div id="feedback"></div>
+        </div>
+      `;
+      document.getElementById('submitBtn').onclick = checkAnswer;
+    }
+
+    function checkAnswer() {
+      const sel = document.querySelector('input[name="opt"]:checked');
+      if (!sel) return;
+      const q = selected[currentIndex];
+      const fb = document.getElementById('feedback');
+      if (parseInt(sel.value) === q.answer) {
+        score++;
+        fb.innerHTML = `<p style="color: var(--correct-color);">Correct! ${q.explanation}</p>`;
+      } else {
+        fb.innerHTML = `<p style="color: var(--wrong-color);">Wrong. ${q.explanation}</p>`;
+      }
+      const btn = document.getElementById('submitBtn');
+      btn.textContent = currentIndex < selected.length - 1 ? 'Next' : 'Finish';
+      btn.onclick = nextQuestion;
+    }
+
+    function nextQuestion() {
+      currentIndex++;
+      if (currentIndex < selected.length) {
+        showQuestion();
+      } else {
+        container.innerHTML = `<div id="score">Your score: ${score} / ${selected.length}</div>`;
+        progressEl.textContent = '';
+      }
+    }
+
+    showQuestion();
+  </script>
+</body>
+</html>
