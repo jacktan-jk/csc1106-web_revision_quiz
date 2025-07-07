@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Week 4 Quiz</title>
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --background-color: #ecf0f1;
+      --card-color: #ffffff;
+      --accent-color: #e67e22;
+      --correct-color: #27ae60;
+      --wrong-color: #c0392b;
+    }
+    body {
+      background: var(--background-color);
+      color: var(--primary-color);
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 700px;
+      margin: 2rem auto;
+      background: var(--card-color);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 { text-align: center; margin-bottom: 1rem; }
+    .progress { text-align: right; font-size: 0.9rem; margin-bottom: 1rem; }
+    .question { margin-bottom: 1.5rem; }
+    .options { list-style: none; padding: 0; }
+    .options li { margin: 0.75rem 0; }
+    button {
+      background: var(--accent-color);
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1.25rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover { background: #d35400; }
+    #feedback { margin-top: 1rem; font-weight: bold; }
+    #score { text-align: center; font-size: 1.2rem; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Week 4 Quiz</h1>
+    <div class="progress" id="progress"></div>
+    <div id="quiz-container"></div>
+  </div>
+  <script>
+    const pool = [
+      { text: "What is middleware in web frameworks?", options: ["Reusable components between server and handler logic", "Client-side UI library", "Database connector", "HTML templating engine"], answer: 0, explanation: "Middleware are reusable components that intercept and augment requests and responses before final handler." },
+      { text: "Which Actix-Web traits must middleware implement?", options: ["Handler & Filter", "Transform & Service", "Responder & Request", "Future & Stream"], answer: 1, explanation: "Actix-Web middleware implements Transform and Service traits." },
+      { text: "Which is NOT a common use case for middleware?", options: ["Logging request paths", "CORS", "Business logic in handler", "Response compression"], answer: 2, explanation: "Business logic belongs in handlers, not middleware." },
+      { text: "Logger middleware records which details?", options: ["Request method and path", "Database query logs", "CSS load times", "HTML parse errors"], answer: 0, explanation: "The Logger middleware logs HTTP method, path, status code for monitoring." },
+      { text: "What does the Compress middleware do?", options: ["Minifies JS files", "Applies gzip/Brotli compression to responses", "Bundles CSS files", "Encrypts payloads"], answer: 1, explanation: "Compress middleware automatically compresses responses using gzip or brotli." },
+      { text: "NormalizePath middleware handles:", options: ["Query parameters order", "Trailing slashes in URLs", "Header capitalization", "Cookie paths"], answer: 1, explanation: "NormalizePath ensures consistent URL formatting by normalizing trailing slashes." },
+      { text: "CORS middleware configures:", options: ["Cross-Origin Resource Sharing policies", "Content Security Policy headers", "Rate limiting", "Error formatting"], answer: 0, explanation: "CORS middleware enables and configures cross-origin resource sharing." },
+      { text: "ErrorHandlers middleware is used to: ", options: ["Log request details", "Customize error responses", "Accelerate middleware pipeline", "Validate schemas"], answer: 1, explanation: "ErrorHandlers intercepts errors to present custom pages or JSON messages." },
+      { text: "Same-Origin Policy restricts client scripts from: ", options: ["Parsing HTML", "Making requests to a different domain", "Accessing local storage", "Rendering CSS"], answer: 1, explanation: "Same-Origin Policy prevents scripts from requesting resources from other domains." },
+      { text: "Which header allows a cross-origin request?", options: ["Access-Control-Allow-Origin", "Content-Type", "X-Frame-Options", "Cache-Control"], answer: 0, explanation: "Access-Control-Allow-Origin specifies which origins are permitted." },
+      { text: "In client modules, asynchronous operations handle: ", options: ["State updates", "Network requests and user input", "Logging only", "Template rendering"], answer: 1, explanation: "Async operations perform network calls or wait for user events." },
+      { text: "Synchronous operations handle: ", options: ["Network I/O", "Updating application state", "File uploads", "CSS compilation"], answer: 1, explanation: "Synchronous code updates app state based on received data." },
+      { text: "Separating sync and async code improves: ", options: ["Production load times", "Error localization and testing", "Memory usage", "UI styling"], answer: 1, explanation: "Separation isolates logic, making debugging and unit testing easier." },
+      { text: "Disadvantage of separation is: ", options: ["Simpler code", "Less testable", "Increased code complexity", "Fewer modules"], answer: 2, explanation: "It adds modules and boilerplate, increasing complexity and dev time." },
+      { text: "Hashing strategy in file naming uses: ", options: ["Current timestamp", "Random UUID", "Hash of file content", "User ID prefix"], answer: 2, explanation: "Hashing uses a digest of file content to ensure unique names based on content." },
+      { text: "Database reference naming strategy uses: ", options: ["Timestamp only", "UUID only", "Auto-increment ID as filename", "Original name"], answer: 2, explanation: "It names files by DB record IDs and stores metadata in the database." },
+      { text: "Which HTTP method is idempotent?", options: ["POST", "PUT", "PATCH", "CONNECT"], answer: 1, explanation: "PUT is idempotent—repeated requests result in same state." },
+      { text: "PATCH differs from PUT by: ", options: ["Full resource replacement vs partial update", "Better encryption", "Faster performance", "Statelessness"], answer: 0, explanation: "PATCH applies partial updates, PUT replaces entire resource." },
+      { text: "Which method triggers a CORS preflight?", options: ["OPTIONS", "HEAD", "GET", "TRACE"], answer: 0, explanation: "Browsers send an OPTIONS request to check CORS policies before actual call." },
+      { text: "Testing client modules often uses request interception: ", options: ["Real server calls", "Mock server intercepting HTTP calls", "Browser UI tests", "Manual QA"], answer: 1, explanation: "Automated tests intercept client requests to a mock server for isolation." },
+      { text: "Unit testing synchronous logic requires code to be: ", options: ["Async functions only", "Side-effect free functions", "DOM-dependent code", "Middleware code only"], answer: 1, explanation: "Pure synchronous functions accepting input and returning output are easy to unit test." },
+      { text: "Middleware is applied in the server pipeline: ", options: ["Before route handlers", "After sending response", "During DB migration", "At compile time"], answer: 0, explanation: "Middleware intercepts requests before passing to handlers." },
+      { text: "File naming with timestamp strategy might look like: ", options: ["uuid1234.jpg", "1616161616_photo.png", "hashfile.pdf", "userfile.doc"], answer: 1, explanation: "Timestamp filenames prepend or append epoch time to original names." },
+      { text: "Middleware can modify which parts?", options: ["Requests and responses headers", "Binary executables", "Database schemas", "Network interfaces"], answer: 0, explanation: "Middleware can inspect and modify request/response headers and bodies." }
+    ];
+
+    function shuffle(arr) {
+      let n = arr.length, temp, idx;
+      while (n) {
+        idx = Math.floor(Math.random() * n--);
+        temp = arr[n]; arr[n] = arr[idx]; arr[idx] = temp;
+      }
+      return arr;
+    }
+
+    const selected = shuffle(pool).slice(0, 20);
+    let currentIndex = 0, score = 0;
+    const container = document.getElementById('quiz-container');
+    const progressEl = document.getElementById('progress');
+
+    function showProgress() { progressEl.textContent = `Question ${currentIndex+1} of ${selected.length}`; }
+    function showQuestion() {
+      showProgress();
+      const q = selected[currentIndex];
+      container.innerHTML = `
+        <div class="question">
+          <p><strong>${q.text}</strong></p>
+          <ul class="options">
+            ${q.options.map((opt,i) => `<li><label><input type=\"radio\" name=\"opt\" value=\"${i}\"> ${opt}</label></li>`).join('')}
+          </ul>
+          <button id="submitBtn">Submit</button>
+          <div id="feedback"></div>
+        </div>
+      `; document.getElementById('submitBtn').onclick = checkAnswer;
+    }
+    function checkAnswer() {
+      const sel = document.querySelector('input[name="opt"]:checked'); if (!sel) return;
+      const q = selected[currentIndex]; const fb = document.getElementById('feedback');
+      if (+sel.value === q.answer) { score++; fb.innerHTML = `<p style=\"color: var(--correct-color);\">Correct! ${q.explanation}</p>`; }
+      else { fb.innerHTML = `<p style=\"color: var(--wrong-color);\">Wrong. ${q.explanation}</p>`; }
+      const btn = document.getElementById('submitBtn'); btn.textContent = currentIndex < selected.length-1 ? 'Next' : 'Finish';
+      btn.onclick = nextQuestion;
+    }
+    function nextQuestion() {
+      currentIndex++;
+      if (currentIndex < selected.length) showQuestion();
+      else { container.innerHTML = `<div id=\"score\">Your score: ${score} / ${selected.length}</div>`; progressEl.textContent = ''; }
+    }
+    showQuestion();
+  </script>
+</body>
+</html>
+
