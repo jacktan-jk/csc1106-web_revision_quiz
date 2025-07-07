@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Week 5 Quiz - Database & Template Engine</title>
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --background-color: #ecf0f1;
+      --card-color: #ffffff;
+      --accent-color: #16a085;
+      --correct-color: #27ae60;
+      --wrong-color: #c0392b;
+    }
+    body {
+      background: var(--background-color);
+      color: var(--primary-color);
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 700px;
+      margin: 2rem auto;
+      background: var(--card-color);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 { text-align: center; margin-bottom: 1rem; }
+    .progress { text-align: right; font-size: 0.9rem; margin-bottom: 1rem; }
+    .question { margin-bottom: 1.5rem; }
+    .options { list-style: none; padding: 0; }
+    .options li { margin: 0.75rem 0; }
+    button {
+      background: var(--accent-color);
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1.25rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover { background: #138d75; }
+    #feedback { margin-top: 1rem; font-weight: bold; }
+    #score { text-align: center; font-size: 1.2rem; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Week 5 Quiz</h1>
+    <div class="progress" id="progress"></div>
+    <div id="quiz-container"></div>
+  </div>
+  <script>
+    const pool = [
+      { text: "Which database is embedded and serverless?", options: ["PostgreSQL", "MySQL", "SQLite", "MongoDB"], answer: 2, explanation: "SQLite is an embedded, serverless database stored in a single file." },
+      { text: "Which database uses MVCC for excellent concurrency?", options: ["SQLite", "PostgreSQL", "MySQL (MyISAM)", "Microsoft SQL Server"], answer: 1, explanation: "PostgreSQL uses MVCC to allow high concurrency without locking." },
+      { text: "Which DB supports JSONB and custom types?", options: ["MySQL", "SQLite", "PostgreSQL", "Redis"], answer: 2, explanation: "PostgreSQL offers JSONB, arrays, and custom types for strict typing." },
+      { text: "Which database is public domain with no configuration?", options: ["MySQL", "PostgreSQL", "SQLite", "Oracle"], answer: 2, explanation: "SQLite is public domain and zero-configuration." },
+      { text: "Which DB engine is common in LAMP stacks?", options: ["PostgreSQL", "SQLite", "MySQL", "Cassandra"], answer: 2, explanation: "MySQL (with InnoDB) is widely used in LAMP web applications." },
+      { text: "Which database provides a PostGIS extension?", options: ["MySQL", "PostgreSQL", "SQLite", "MongoDB"], answer: 1, explanation: "PostgreSQL supports geospatial queries via the PostGIS extension." },
+      { text: "ACID stands for: ", options: ["Atomicity, Consistency, Isolation, Durability", "Accuracy, Concurrency, Integrity, Durability", "Atomicity, Consistency, Integrity, Distribution", "Asynchronous, Consistent, Isolated, Durable"], answer: 0, explanation: "ACID refers to Atomicity, Consistency, Isolation, and Durability." },
+      { text: "Which SQL statement creates an index?", options: ["CREATE TABLE", "CREATE INDEX", "ALTER INDEX", "INDEX TABLE"], answer: 1, explanation: "You use CREATE INDEX to define a new index on a table." },
+      { text: "What does ORM stand for?", options: ["Object-Relational Mapping", "Operational Resource Manager", "Ordered Result Model", "Object Resource Middleware"], answer: 0, explanation: "ORM stands for Object-Relational Mapping." },
+      { text: "What is a .env file used for?", options: ["Database schema file", "Template for HTML", "Environment variable configuration", "Compiled code"], answer: 2, explanation: ".env stores environment variables like DB URLs for applications." },
+      { text: "Which library loads .env variables in Rust?", options: ["dotenv", "env-load", "config", "dotenvy"], answer: 0, explanation: "The dotenv crate loads environment variables from a .env file." },
+      { text: "A template engine is used to: ", options: ["Compile Rust code", "Generate text (e.g., HTML) by combining templates and data", "Minify CSS", "Manage database connections"], answer: 1, explanation: "Template engines render templates with dynamic data to produce text output." },
+      { text: "Which syntax denotes variable substitution in templates?", options: ["{{ variable }}", "<< variable >>", "[% variable %]", "## variable ##"], answer: 0, explanation: "Double curly braces syntax {{ }} is used for variable substitution." },
+      { text: "Which tag begins a loop in most template engines?", options: ["{% for item in list %}", "<for>item</for>", "[[ for item ]]", ":for item:"], answer: 0, explanation: "{% for ... %} starts a loop over a sequence in templating languages." },
+      { text: "Which tag defines a conditional in templates?", options: ["{% if condition %}", "{{ if(condition) }}", "<if>condition</if>", "[if]condition[/if]"], answer: 0, explanation: "{% if ... %} initiates an if-statement in templates." },
+      { text: "Template inheritance allows: ", options: ["Including CSS files", "Extending base templates with common layouts", "Database migrations", "Client-side rendering"], answer: 1, explanation: "Inheritance lets child templates reuse structures from base templates." },
+      { text: "Server-Side Rendering (SSR) means: ", options: ["Rendering UI in browser via JavaScript", "Server generates full HTML before sending", "Using CSS preprocessors", "Streaming data incrementally"], answer: 1, explanation: "SSR sends fully rendered HTML pages generated on the server." },
+      { text: "Client-Side Rendering (CSR) means: ", options: ["Server sends minimal HTML and JS builds UI in browser", "Server renders full HTML", "CSS compiled on server", "DB queries run on client"], answer: 0, explanation: "CSR relies on JS frameworks in the browser to build UI dynamically." },
+      { text: "In template engines, partials refer to: ", options: ["Sub-templates included in multiple pages", "Database records", "Server routes", "CSS classes"], answer: 0, explanation: "Partials are reusable template fragments included where needed." },
+      { text: "Which Rust templating library is commonly used?", options: ["Diesel", "Tera", "Rocket", "Actix"], answer: 1, explanation: "Tera is a popular templating engine for Rust, similar to Jinja2." },
+      { text: "A database connection pool improves: ", options: ["CSS load times", "Concurrent DB access and performance", "Image compression", "Client routing"], answer: 1, explanation: "Connection pools reuse DB connections to handle concurrent requests efficiently." },
+      { text: "Environment variables often store: ", options: ["HTML templates", "Database credentials and URLs", "CSS styles", "Client-side scripts"], answer: 1, explanation: "env variables keep sensitive info like DB credentials out of code." }
+    ];
+
+    function shuffle(arr) {
+      let n = arr.length, temp, idx;
+      while (n) { idx = Math.floor(Math.random() * n--);
+        temp = arr[n]; arr[n] = arr[idx]; arr[idx] = temp; }
+      return arr;
+    }
+
+    const selected = shuffle(pool.slice()).slice(0, 20);
+    let currentIndex = 0, score = 0;
+    const container = document.getElementById('quiz-container');
+    const progressEl = document.getElementById('progress');
+
+    function showProgress() { progressEl.textContent = `Question ${currentIndex+1} of ${selected.length}`; }
+    function showQuestion() {
+      showProgress();
+      const q = selected[currentIndex];
+      container.innerHTML = `
+        <div class="question">
+          <p><strong>${q.text}</strong></p>
+          <ul class="options">
+            ${q.options.map((opt,i) => `<li><label><input type="radio" name="opt" value="${i}"> ${opt}</label></li>`).join('')}
+          </ul>
+          <button id="submitBtn">Submit</button>
+          <div id="feedback"></div>
+        </div>
+      `;
+      document.getElementById('submitBtn').onclick = checkAnswer;
+    }
+    function checkAnswer() {
+      const sel = document.querySelector('input[name="opt"]:checked'); if (!sel) return;
+      const q = selected[currentIndex]; const fb = document.getElementById('feedback');
+      if (parseInt(sel.value) === q.answer) {
+        score++; fb.innerHTML = `<p style="color: var(--correct-color);">Correct! ${q.explanation}</p>`;
+      } else {
+        fb.innerHTML = `<p style="color: var(--wrong-color);">Wrong. ${q.explanation}</p>`;
+      }
+      const btn = document.getElementById('submitBtn');
+      btn.textContent = currentIndex < selected.length-1 ? 'Next' : 'Finish';
+      btn.onclick = nextQuestion;
+    }
+    function nextQuestion() {
+      currentIndex++;
+      if (currentIndex < selected.length) showQuestion();
+      else { container.innerHTML = `<div id="score">Your score: ${score} / ${selected.length}</div>`; progressEl.textContent = ''; }
+    }
+    showQuestion();
+  </script>
+</body>
+</html>
+
