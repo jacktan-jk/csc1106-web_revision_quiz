@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Week 2 Quiz</title>
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --background-color: #ecf0f1;
+      --card-color: #ffffff;
+      --accent-color: #8e44ad;
+      --correct-color: #27ae60;
+      --wrong-color: #c0392b;
+    }
+    body {
+      background: var(--background-color);
+      color: var(--primary-color);
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 700px;
+      margin: 2rem auto;
+      background: var(--card-color);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 { text-align: center; margin-bottom: 1rem; }
+    .progress { text-align: right; font-size: 0.9rem; margin-bottom: 1rem; }
+    .question { margin-bottom: 1.5rem; }
+    .options { list-style: none; padding: 0; }
+    .options li { margin: 0.75rem 0; }
+    button {
+      background: var(--accent-color);
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1.25rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover { background: #732d91; }
+    #feedback { margin-top: 1rem; font-weight: bold; }
+    #score { text-align: center; font-size: 1.2rem; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Week 2 Quiz</h1>
+    <div class="progress" id="progress"></div>
+    <div id="quiz-container"></div>
+  </div>
+  <script>
+    const pool = [
+      { text: "Which keyword defines a function in Rust?", options: ["func", "fn", "function", "let"], answer: 1, explanation: "Rust uses fn to declare functions." },
+      { text: "How do you invoke a macro in Rust?", options: ["my_macro[]", "my_macro!()", "my_macro()", "#my_macro"], answer: 1, explanation: "Macros use !, e.g., my_macro!(...)." },
+      { text: "Macros are expanded at which phase?", options: ["Runtime", "Compile time", "Link time", "Execution time"], answer: 1, explanation: "Macros generate code during compilation." },
+      { text: "Which of these is a feature of functions but NOT macros?", options: ["Type checking", "Generate new code", "Custom syntax", "Token manipulation"], answer: 0, explanation: "Functions are type-checked; macros operate on tokens." },
+      { text: "Which feature is unique to macros?", options: ["Run at runtime", "Borrow values", "Generate multiple handlers", "Immutable references"], answer: 2, explanation: "Macros can generate repetitive code templates." },
+      { text: "What does the & operator do in Rust?", options: ["Dereferences a pointer", "Borrows a value", "Moves a value", "Clones a value"], answer: 1, explanation: "& creates a reference (borrow) without taking ownership." },
+      { text: "What type is &T?", options: ["Mutable reference", "Ownership transfer", "Immutable reference", "Owned value"], answer: 2, explanation: "&T is an immutable borrow of T." },
+      { text: "How do you create a mutable borrow?", options: ["&mut T", "&T mut", "mut &T", "move T"], answer: 0, explanation: "&mut T yields a mutable reference." },
+      { text: "Rust ensures memory safety primarily through...", options: ["Garbage collection", "Ownership and borrowing", "Runtime checks", "Manual free"], answer: 1, explanation: "Ownership and borrowing rules enforce memory safety." },
+      { text: "What happens after moving ownership of a value?", options: ["Original can still be used", "Original is invalidated", "Value is cloned automatically", "Value is shared"], answer: 1, explanation: "After let b = a;, a is no longer usable." },
+      { text: "How do you explicitly duplicate a value?", options: ["copy()", "duplicate()", "clone()", "replicate()"], answer: 2, explanation: "clone() creates a deep copy of a value." },
+      { text: "What is the unit type in Rust?", options: ["<()>", "()", "unit", "Void"], answer: 1, explanation: "() represents the unit type (empty tuple)." },
+      { text: "In generics, <()> means...", options: ["Tuple with one unit", "Generic type ()", "Lifetime specifier", "Mutable unit"], answer: 1, explanation: "It sets the generic parameter to the unit type." },
+      { text: "Ownership analogy: giving the key completely to someone is a...", options: ["Borrow", "Clone", "Move", "Reference"], answer: 2, explanation: "Move transfers ownership—original can’t use it." },
+      { text: "Ownership analogy: letting someone use without giving key is a...", options: ["Move", "Borrow", "Clone", "Free"], answer: 1, explanation: "Borrowing shares access without losing ownership." },
+      { text: "Ownership analogy: making a copy of the key is a...", options: ["Move", "Borrow", "Clone", "Sync"], answer: 2, explanation: "Cloning duplicates the data—both can use." },
+      { text: "Which macro defines declarative macros?", options: ["define_macro!", "macro_rules!", "proc_macro!", "gen!"], answer: 1, explanation: "macro_rules! is used for declarative macros." },
+      { text: "Procedural macros run at...", options: ["Runtime", "Compile time", "Link time", "Deployment"], answer: 1, explanation: "Procedural macros also expand during compilation." },
+      { text: "What is a procedural macro in Rust used for?", options: ["Runtime logic", "Code generation", "Memory allocation", "Async handling"], answer: 1, explanation: "Procedural macros generate code programmatically." },
+      { text: "OOP in Rust uses which construct for data?", options: ["class", "struct", "enum", "trait"], answer: 1, explanation: "Rust uses struct to define data types for OOP patterns." },
+      { text: "Data transfer in web contexts often uses...", options: ["XML", "JSON", "YAML", "CSV"], answer: 1, explanation: "JSON is common for serializing data in web APIs." },
+      { text: "Why is memory safety critical in web development?", options: ["Better performance", "Prevent crashes and vulnerabilities", "Simplify syntax", "Reduce file size"], answer: 1, explanation: "Memory safety avoids bugs and security issues like buffer overflows." },
+      { text: "WebAssembly (WASM) enables...", options: ["Server-side rendering", "High-performance code in browser", "CSS preprocessing", "Database queries"], answer: 1, explanation: "WASM runs near-native code securely in browsers." },
+      { text: "Rust doesn’t use garbage collection, relying instead on...", options: ["Manual free()", "RAII with ownership", "Reference counting only", "Runtime GC"], answer: 1, explanation: "Rust’s RAII and ownership model manage memory without GC." }
+    ];
+
+    function shuffle(array) {
+      let current = array.length, temp, random;
+      while (current) {
+        random = Math.floor(Math.random() * current);
+        current--;
+        temp = array[current];
+        array[current] = array[random];
+        array[random] = temp;
+      }
+      return array;
+    }
+
+    const selected = shuffle(pool.slice()).slice(0, 20);
+    let currentIndex = 0, score = 0;
+    const container = document.getElementById('quiz-container');
+    const progressEl = document.getElementById('progress');
+
+    function showProgress() {
+      progressEl.textContent = `Question ${currentIndex + 1} of ${selected.length}`;
+    }
+
+    function showQuestion() {
+      showProgress();
+      const q = selected[currentIndex];
+      container.innerHTML = `
+        <div class="question">
+          <p><strong>${q.text}</strong></p>
+          <ul class="options">
+            ${q.options.map((opt, i) => `<li><label><input type="radio" name="opt" value="${i}"> ${opt}</label></li>`).join('')}
+          </ul>
+          <button id="submitBtn">Submit</button>
+          <div id="feedback"></div>
+        </div>
+      `;
+      document.getElementById('submitBtn').onclick = checkAnswer;
+    }
+
+    function checkAnswer() {
+      const sel = document.querySelector('input[name="opt"]:checked');
+      if (!sel) return;
+      const q = selected[currentIndex];
+      const fb = document.getElementById('feedback');
+      if (parseInt(sel.value) === q.answer) {
+        score++;
+        fb.innerHTML = `<p style="color: var(--correct-color);">Correct! ${q.explanation}</p>`;
+      } else {
+        fb.innerHTML = `<p style="color: var(--wrong-color);">Wrong. ${q.explanation}</p>`;
+      }
+      const btn = document.getElementById('submitBtn');
+      btn.textContent = currentIndex < selected.length - 1 ? 'Next' : 'Finish';
+      btn.onclick = nextQuestion;
+    }
+
+    function nextQuestion() {
+      currentIndex++;
+      if (currentIndex < selected.length) {
+        showQuestion();
+      } else {
+        container.innerHTML = `<div id="score">Your score: ${score} / ${selected.length}</div>`;
+        progressEl.textContent = '';
+      }
+    }
+
+    showQuestion();
+  </script>
+</body>
+</html>
+
