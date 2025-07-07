@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Week 8 Quiz</title>
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --background-color: #ecf0f1;
+      --card-color: #ffffff;
+      --accent-color: #e74c3c;
+      --correct-color: #27ae60;
+      --wrong-color: #c0392b;
+    }
+    body {
+      background: var(--background-color);
+      color: var(--primary-color);
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 700px;
+      margin: 2rem auto;
+      background: var(--card-color);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 { text-align: center; margin-bottom: 1rem; }
+    .progress { text-align: right; font-size: 0.9rem; margin-bottom: 1rem; }
+    .question { margin-bottom: 1.5rem; }
+    .options { list-style: none; padding: 0; }
+    .options li { margin: 0.75rem 0; }
+    button {
+      background: var(--accent-color);
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1.25rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover { background: #c0392b; }
+    #feedback { margin-top: 1rem; font-weight: bold; }
+    #score { text-align: center; font-size: 1.2rem; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Week 8 Quiz</h1>
+    <div class="progress" id="progress"></div>
+    <div id="quiz-container"></div>
+  </div>
+  <script>
+    const pool = [
+      { text: "What is the primary purpose of authentication?", options: ["Verify identity of a user", "Grant permissions", "Log performance metrics", "Encrypt data"], answer: 0, explanation: "Authentication checks that the user is who they claim to be." },
+      { text: "What does authorization determine?", options: ["If a user is logged in", "If a user may perform a task", "Password strength", "Token format"], answer: 1, explanation: "Authorization controls access rights to resources or actions." },
+      { text: "Which of these is a 'something you have' factor?", options: ["Password", "Fingerprint", "Hardware token", "Behavior"], answer: 2, explanation: "A hardware token is a physical object the user possesses." },
+      { text: "HMAC provides what security property?", options: ["Encryption", "Message integrity and authenticity", "Data compression", "User identification"], answer: 1, explanation: "HMAC ensures data hasn't been tampered and verifies sender authenticity." },
+      { text: "Why salt passwords before hashing?", options: ["Speed up hashing", "Prevent precomputed attacks", "Encrypt the hash", "Store plaintext"], answer: 1, explanation: "Salt defends against rainbow-table and precomputed hash attacks." },
+      { text: "Which HTTP header instructs the client to store a cookie?", options: ["Cookie", "Set-Cookie", "Authorization", "Location"], answer: 1, explanation: "Set-Cookie header sets cookies on the client." },
+      { text: "Which header sends stored cookies back to the server?", options: ["Cookie", "Set-Cookie", "X-CSRF-Token", "Referer"], answer: 0, explanation: "Cookie header includes stored cookies in client requests." },
+      { text: "Cookie flag to disallow JavaScript access is called?", options: ["Secure", "HttpOnly", "SameSite", "Path"], answer: 1, explanation: "HttpOnly prevents cookies from being accessed via JS." },
+      { text: "Cookie flag that enforces HTTPS only is?", options: ["HttpOnly", "Secure", "Domain", "Expires"], answer: 1, explanation: "Secure ensures cookies are sent only over HTTPS." },
+      { text: "Session fixation attack exploits what?", options: ["Weak passwords", "Client-chosen session ID", "XSS vulnerability", "Brute-force token"], answer: 1, explanation: "Fixation uses attacker-set session IDs to hijack sessions." },
+      { text: "Mitigation for session fixation?", options: ["Hash passwords", "Rotate session ID on login", "Use HTTP auth", "Disable cookies"], answer: 1, explanation: "Generating a new session ID after login prevents fixation." },
+      { text: "Which status code indicates unauthorized access?", options: ["200", "401", "403", "404"], answer: 1, explanation: "401 Unauthorized means authentication is required." },
+      { text: "What does a nonce prevent in Digest auth?", options: ["Replay attacks", "Weak passwords", "CSRF", "SQL injection"], answer: 0, explanation: "A unique nonce stops attackers from reusing old credentials." },
+      { text: "Which attack does XSS enable for cookies?", options: ["SQL injection", "Session hijacking", "CSRF", "Brute-force"], answer: 1, explanation: "XSS can steal cookies, allowing session hijacking." },
+      { text: "Key mitigation against XSS cookie theft?", options: ["Use nonce", "HttpOnly cookies", "Rotate tokens", "Use GET only"], answer: 1, explanation: "HttpOnly cookies cannot be read by injected scripts." },
+      { text: "What is two-factor authentication (2FA)?", options: ["Two passwords", "Two distinct factor types", "Two users login", "Two sessions"], answer: 1, explanation: "2FA uses two different authentication factors for extra security." },
+      { text: "Which storage is used for server-side session state?", options: ["Cookie only", "LocalStorage", "Redis or database", "IndexDB"], answer: 2, explanation: "Servers store session state in Redis, DB, or memory for persistence." },
+      { text: "SameSite cookie attribute helps prevent: ", options: ["XSS", "Session fixation", "CSRF", "Brute-force"], answer: 2, explanation: "SameSite restricts cross-site requests, mitigating CSRF." },
+      { text: "What does changing session ID on login prevent?", options: ["XSS", "CSRF", "Session fixation", "Replay attacks"], answer: 2, explanation: "Refreshing the session key blocks fixation attempts." },
+      { text: "Basic HTTP Auth sends credentials in: ", options: ["Plain headers base64-encoded", "Encrypted body JSON", "Cookie header", "TLS handshake"], answer: 0, explanation: "Basic auth uses base64-encoded credentials in Authorization header." },
+      { text: "Why is Basic Auth often impractical for users?", options: ["Too secure", "Prompts login for every request", "Not supported by browsers", "No encryption"], answer: 1, explanation: "Without sessions, basic auth re-prompts on each navigation." },
+      { text: "To protect cookies from CSRF, use: ", options: ["HttpOnly only", "CSRF tokens and SameSite", "Encrypt cookies", "Disable cookies"], answer: 1, explanation: "CSRF tokens plus SameSite attribute mitigate CSRF attacks." },
+      { text: "What best practice ensures password storage safety?", options: ["Store plaintext", "Use one-way salted hash", "Encrypt reversibly", "Use md5 only"], answer: 1, explanation: "Salted, one-way hashes protect passwords even if DB leaks." },
+      { text: "Session hijacking often exploits: ", options: ["Weak TLS", "Stolen session cookies", "SQL injection", "XSRF token"], answer: 1, explanation: "Hijacking uses stolen or intercepted session cookies." }
+    ];
+
+    function shuffle(arr) {
+      let n = arr.length, temp, idx;
+      while (n) {
+        idx = Math.floor(Math.random() * n--);
+        temp = arr[n];
+        arr[n] = arr[idx];
+        arr[idx] = temp;
+      }
+      return arr;
+    }
+
+    const selected = shuffle(pool.slice()).slice(0, 20);
+    let currentIndex = 0, score = 0;
+    const container = document.getElementById('quiz-container');
+    const progressEl = document.getElementById('progress');
+
+    function showProgress() {
+      progressEl.textContent = `Question ${currentIndex + 1} of ${selected.length}`;
+    }
+
+    function showQuestion() {
+      showProgress();
+      const q = selected[currentIndex];
+      container.innerHTML = `
+        <div class="question">
+          <p><strong>${q.text}</strong></p>
+          <ul class="options">
+            ${q.options.map((opt, i) => `
+              <li>
+                <label>
+                  <input type="radio" name="opt" value="${i}"> ${opt}
+                </label>
+              </li>
+            `).join('')}
+          </ul>
+          <button id="submitBtn">Submit</button>
+          <div id="feedback"></div>
+        </div>
+      `;
+      document.getElementById('submitBtn').onclick = checkAnswer;
+    }
+
+    function checkAnswer() {
+      const sel = document.querySelector('input[name="opt"]:checked');
+      if (!sel) return;
+      const q = selected[currentIndex];
+      const fb = document.getElementById('feedback');
+      if (parseInt(sel.value) === q.answer) {
+        score++;
+        fb.innerHTML = `<p style="color: var(--correct-color);">Correct! ${q.explanation}</p>`;
+      } else {
+        fb.innerHTML = `<p style="color: var(--wrong-color);">Wrong. ${q.explanation}</p>`;
+      }
+      const btn = document.getElementById('submitBtn');
+      btn.textContent = currentIndex < selected.length - 1 ? 'Next' : 'Finish';
+      btn.onclick = nextQuestion;
+    }
+
+    function nextQuestion() {
+      currentIndex++;
+      if (currentIndex < selected.length) {
+        showQuestion();
+      } else {
+        container.innerHTML = `<div id="score">Your score: ${score} / ${selected.length}</div>`;
+        progressEl.textContent = '';
+      }
+    }
+
+    showQuestion();
+  </script>
+</body>
+</html>
+
