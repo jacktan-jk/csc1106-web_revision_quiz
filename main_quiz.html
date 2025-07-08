@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Main Quiz - 50 Random Questions</title>
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --background-color: #ecf0f1;
+      --card-color: #ffffff;
+      --accent-color: #9b59b6;
+      --correct-color: #27ae60;
+      --wrong-color: #c0392b;
+    }
+    body {
+      background: var(--background-color);
+      color: var(--primary-color);
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      background: var(--card-color);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .progress {
+      text-align: right;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+    .question {
+      margin-bottom: 1.5rem;
+    }
+    .options {
+      list-style: none;
+      padding: 0;
+    }
+    .options li {
+      margin: 0.75rem 0;
+    }
+    button {
+      background: var(--accent-color);
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1.25rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover {
+      background: #8e44ad;
+    }
+    #feedback {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    #score {
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Main Quiz</h1>
+    <p class="progress" id="progress"></p>
+    <div id="quiz-container"></div>
+  </div>
+  <script>
+    const pool = [
+      // Week 1 (25)
+      {text:"Which metric typically has the strongest correlation with page load time?",options:["Total bytes downloaded","Number of object requests","Number of servers contacted","Number of CSS files"],answer:1,explanation:"Each HTTP request adds latency and overhead, making object count highly predictive of load time."},
+      {text:"What is a 'third-party origin'?",options:["Your own server","Any domain not matching your site's domain","A CDN you control","Your browser's cache"],answer:1,explanation:"A third-party origin serves resources from a different domain than your site."},
+      {text:"Synthetic tests are characterized by:",options:["Collecting real user data","Emulated network/browser conditions in lab","Logging production errors","Analyzing third-party scripts"],answer:1,explanation:"Synthetic tests run in controlled environments to measure performance under set conditions."},
+      {text:"Real User Monitoring (RUM) refers to:",options:["Lab-based emulation","Simulated traffic","Collecting performance data from actual user sessions","Static code analysis"],answer:2,explanation:"RUM captures metrics from real users in production environments."},
+      {text:"HTTP/2 multiplexing allows:",options:["Multiple connections per resource","Parallel requests over a single TCP connection","Prioritizing CSS over JS","Encrypting images"],answer:1,explanation:"Multiplexing sends multiple streams concurrently on one connection, reducing latency."},
+      {text:"Minification refers to:",options:["Compressing images","Removing whitespace/comments from code","Bundling modules","Encrypting JavaScript"],answer:1,explanation:"Minification strips unnecessary characters to reduce file size."},
+      {text:"The critical rendering path is:",options:["Sequence from HTML to page paint","Order of DNS lookups","List of HTTP headers","Network handshake steps"],answer:0,explanation:"It describes steps the browser takes to convert HTML/CSS/JS to pixels on screen."},
+      {text:"Which hint tag preloads a resource?",options:["<link rel=\"preload\" href=...>","<script defer>","<link rel=\"dns-prefetch\" href=...>","<meta http-equiv=\"preload\">"],answer:0,explanation:"<link rel='preload'> instructs early resource fetch."},
+      {text:"WPO stands for: (Web Performance Optimization)",options:["Web Protocol Optimization","Web Performance Optimization","Web Page Objects","Wideband Performance Ops"],answer:1,explanation:"WPO refers to practices to speed up web pages."},
+      {text:"Which tool is NOT a module bundler?",options:["Browserify","Webpack","Babel","RequireJS"],answer:2,explanation:"Babel is a transpiler, not a bundler."},
+      {text:"TTFB stands for: (Time to First Byte)",options:["Time to First Byte","Total Transfer File Bytes","Time to Full Browser Load","Total Third-party File Blocks"],answer:0,explanation:"Measures time until first byte arrives from server."},
+      {text:"FCP stands for: (First Contentful Paint)",options:["First Contentful Paint","Full Contentful Paint","First Consistent Paint","Fetch Content Protocol"],answer:0,explanation:"Marks when first text/image is painted."},
+      {text:"CLS stands for: (Cumulative Layout Shift)",options:["Cumulative Layout Shift","Client Load Speed","Content Linting Score","Cached Load State"],answer:0,explanation:"Quantifies unexpected layout shifts during load."},
+      {text:"Which header sets cache expiration?",options:["Cache-Control: max-age","Expires","Pragma","Age-Control"],answer:0,explanation:"Cache-Control with max-age defines freshness period."},
+      {text:"JSON stands for: (JavaScript Object Notation)",options:["Java Symbolic Object Notation","JavaScript Object Notation","Java Standard Output Name","JPEG Simple Object Note"],answer:1,explanation:"Lightweight data-interchange format."},
+      {text:"REST stands for: (Representational State Transfer)",options:["Representational State Transfer","Real-time Event Stream Technology","Resource Standard Text","Rapid Service Transport"],answer:0,explanation:"Architectural style for networked applications."},
+      {text:"<meta charset=\"UTF-8\"> specifies?",options:["Character encoding","Cache expiration","Viewport settings","Server charset negotiation"],answer:0,explanation:"Declares document’s character encoding."},
+      {text:"Where to place <script> for best performance?",options:["Head","End of body","Inside meta tags","Before <!DOCTYPE>"],answer:1,explanation:"At end prevents blocking HTML parsing."},
+      {text:"Select all <p> inside .container: ",options:[".container p","p .container","#container > p",".container > p"],answer:0,explanation:"Selects any descendant paragraphs."},
+      {text:"Which <script> attribute loads asynchronously? (async)",options:["async","defer","module","nomodule"],answer:0,explanation:"Executes immediately upon download."},
+      {text:"dns-prefetch hint does what?",options:["Resolves DNS early","Preloads resource","Prefetches asset","Preconnects TCP"],answer:0,explanation:"Triggers DNS lookup early."},
+      {text:"ETag headers used for?",options:["Compression","Cache validation","Security tokens","Encryption"],answer:1,explanation:"Validate cached resources."},
+      {text:"301 status code means?",options:["Found","Moved Permanently","Not Modified","Temporary Redirect"],answer:1,explanation:"Permanent redirect."},
+      {text:"Default encoding in HTML5?",options:["ISO-8859-1","UTF-8","ASCII","UTF-16"],answer:1,explanation:"UTF-8 is default."},
+      // Week 2 (25)
+      {text:"Rust function keyword? (fn)",options:["func","fn","function","let"],answer:1,explanation:"Defines functions."},
+      {text:"Invoke Rust macro? (macro!())",options:["my_macro[]","my_macro!()","my_macro()","#my_macro"],answer:1,explanation:"Macros use !."},
+      {text:"Macro expansion at?",options:["Runtime","Compile time","Link time","Execution time"],answer:1,explanation:"Compile-time code generation."},
+      {text:"Functions vs macros type-check?",options:["Yes","No"],answer:0,explanation:"Functions are type-checked."},
+      {text:"Mutable borrow syntax? (&mut T)",options:["&mut T","mut &T","&T mut","move T"],answer:0,explanation:"Yields mutable reference."},
+      {text:"Rust safety relies on?",options:["GC","Ownership & borrowing","Runtime checks","Manual free"],answer:1,explanation:"Ownership model ensures safety."},
+      {text:"After move, original is invalidated?",options:["Yes","No","Depends"],answer:0,explanation:"Move invalidates the original binding."},
+      {text:"Clone method purpose?",options:["Deep copy","Shallow copy","Move value","Delete value"],answer:0,explanation:"clone() produces a deep copy."},
+      {text:"Unit type in Rust? (())",options:["()","unit","void","nil"],answer:0,explanation:"() is the unit type."},
+      {text:"Generic parameter <()> means?",options:["Unit type","Lifetime","Mutable reference","Empty tuple"],answer:0,explanation:"Specifies unit as generic type."},
+      {text:"Key analogy: giving key completely =?",options:["Move","Borrow","Clone","Reference"],answer:0,explanation:"Move transfers ownership."},
+      {text:"Key analogy: copying key =?",options:["Move","Clone","Borrow","Share"],answer:1,explanation:"Clone duplicates the key."},
+      {text:"Declarative macros defined by?",options:["define_macro!","macro_rules!","proc_macro!","gen!"],answer:1,explanation:"macro_rules! declares declarative macros."},
+      {text:"Procedural macros run at?",options:["Compile time","Runtime","Link time","Deployment"],answer:0,explanation:"Procedural macros expand at compile time."},
+      {text:"OOP in Rust uses?",options:["class","struct","enum","trait"],answer:1,explanation:"struct defines data types."},
+      {text:"Web data often serialized as? (JSON)",options:["XML","JSON","YAML","CSV"],answer:1,explanation:"JSON is common format for APIs."},
+      {text:"WASM stands for? (WebAssembly)",options:["WebAssembly","WebScript","WebVM","WebCompile"],answer:0,explanation:"Runs near-native code in browser."},
+      {text:"Rust memory without GC uses?",options:["Ownership model","GC","Ref counting","Manual free"],answer:0,explanation:"Ownership/RAII manage memory."},
+      // Week 4 (24)
+      {text:"What is middleware? (intercepts requests/responses)",options:["Intercepts HTTP pipelines","UI library","DB connector","Templating engine"],answer:0,explanation:"Middleware augments server request/response."},
+      {text:"CORS stands for? (Cross-Origin Resource Sharing)",options:["Cross-Origin Resource Sharing","Cookie-Origin Request Service","Client-Origin Resource Sync","Cross-Organizational Request System"],answer:0,explanation:"CORS controls cross-domain access."},
+      {text:"NormalizePath middleware handles? (trailing slashes)",options:["Trailing slashes","Query order","Header caps","Cookie paths"],answer:0,explanation:"Ensures URL consistency."},
+      {text:"Logger middleware logs? (method and path)",options:["Method & path","DB query logs","CSS load time","HTML errors"],answer:0,explanation:"Captures request method and URL."},
+      {text:"Compress middleware uses? (gzip/Brotli)",options:["gzip/Brotli","LZW","Zip","RAR"],answer:0,explanation:"Applies gzip or brotli compression."},
+      {text:"ErrorHandlers middleware? (custom error responses)",options:["Custom error pages","Caching","Minification","Routing"],answer:0,explanation:"Intercepts errors to customize output."},
+      {text:"Same-Origin Policy restricts? (cross-site scripts)",options:["Cross-site requests","LocalStorage access","CSS rendering","Image loading"],answer:0,explanation:"Blocks cross-origin script execution."},
+      {text:"Preflight method in CORS? (OPTIONS)",options:["OPTIONS","GET","POST","HEAD"],answer:0,explanation:"OPTIONS checks permissions before cross-site requests."},
+      {text:"Async modules handle? (network & user events)",options:["Network calls","CSS styling","DB schema","Routing"],answer:0,explanation:"Supports non-blocking I/O and events."},
+      {text:"Sync code needs to be? (pure functions)",options:["Pure, side-effect free","Stateful","Async","UI-specific"],answer:0,explanation:"Easier to test and reason about."},
+      {text:"Testing client modules uses? (mock server)",options:["Mock server","Real backend"],answer:0,explanation:"Interception for isolated tests."},
+      // Week 5 (22)
+      {text:"Which database is embedded and serverless? (SQLite)",options:["PostgreSQL","MySQL","SQLite","MongoDB"],answer:2,explanation:"SQLite stores data in a single file."},
+      {text:"Which database uses MVCC? (PostgreSQL)",options:["SQLite","MySQL","PostgreSQL","Redis"],answer:2,explanation:"PostgreSQL MVCC prevents locks."},
+      {text:"What does ORM stand for? (Object-Relational Mapping)",options:["Object-Relational Mapping","Operational Resource Manager","Ordered Result Model","Object Request Middleware"],answer:0,explanation:"Bridges objects and relational tables."},
+      {text:"ACID stands for? (Atomicity, Consistency, Isolation, Durability)",options:["Atomicity, Consistency, Isolation, Durability","Accuracy, Concurrency, Integrity, Durability","Atomicity, Consistency, Integrity, Distribution","Asynchronous, Consistent, Isolated, Durable"],answer:0,explanation:"Criteria for reliable transactions."},
+      {text:"What is a .env file used for? (env variables)",options:["HTML template","Env vars","DB schema","Compiled code"],answer:1,explanation:"Holds config like DB URLs."},
+      {text:"Rust crate for .env? (dotenv)",options:["dotenv","envy","config","dotenvy"],answer:0,explanation:"Loads .env into process."},
+      {text:"Template engine purpose? (renders HTML/text)",options:["Minify CSS","Render templates","Route requests","Encrypt data"],answer:1,explanation:"Combines templates with data."},
+      {text:"Variable syntax? ({{ variable }})",options:["{{ variable }}","<% var %>","<< variable >>","[% var %]"],answer:0,explanation:"Standard Jinja-style."},
+      {text:"Loop syntax? ({% for item in list %})",options:["{% for item in list %}","<loop>","[[ for ]]",":for:"],answer:0,explanation:"Iterates over collections."},
+      {text:"Partials are? (reusable sub-templates)",options:["Sub-templates","DB records","CSS classes","JS modules"],answer:0,explanation:"Included fragments."},
+      // Week 8 (24)
+      {text:"What does HMAC stand for? (Hash-based Message Authentication Code)",options:["Hash-based Message Authentication Code","High-speed Media Access Controller","Host Message Access Configuration","Hashed Memory Access Control"],answer:0,explanation:"Ensures message integrity and authenticity."},
+      {text:"Why salt passwords?",options:["Encrypts passwords","Prevents rainbow-table attacks","Speeds hashing","Enables decryption"],answer:1,explanation:"Unique salts thwart precomputed attacks."},
+      {text:"Cookie flag disallow JS? (HttpOnly)",options:["HttpOnly","Secure","SameSite","Path"],answer:0,explanation:"Prevents client-side script access."},
+      {text:"Cookie flag HTTPS only? (Secure)",options:["Secure","HttpOnly","SameSite","Domain"],answer:0,explanation:"Sends cookie only over HTTPS."},
+      {text:"What does CSRF stand for? (Cross-Site Request Forgery)",options:["Cross-Site Request Forgery","Cookie-Side Request Function","Client-Side Request Framework","Cross-Site Routing Fault"],answer:0,explanation:"Attacker-forged authenticated requests."},
+      {text:"What is 2FA? (Two-Factor Authentication)",options:["Two passwords","Two authentication factors","Two servers","Two sessions"],answer:1,explanation:"Adds a second factor."},
+      {text:"HTTP status for auth required? (401)",options:["200","401","403","404"],answer:1,explanation:"401 indicates missing or invalid credentials."},
+      // Week 9 (25)
+      {text:"What does OWASP stand for? (Open Web Application Security Project)",options:["Open Web Application Security Project","Online Web App Security Platform","Open Web Analytics System","Operational Web App Security Protocol"],answer:0,explanation:"Global community for web security."},
+      {text:"What does CSP stand for? (Content Security Policy)",options:["Content Security Policy","Cross-Site Prevention","Cookie Safety Protocol","Client Security Plan"],answer:0,explanation:"Defines approved content sources."},
+      {text:"Which header reveals server software? (Server)",options:["Server","Host","Accept","Referer"],answer:0,explanation:"Shows web server info."},
+      {text:"Framework fingerprint header? (X-Powered-By)",options:["X-Powered-By","Content-Type","Cache-Control","Set-Cookie"],answer:0,explanation:"Often discloses framework."},
+      {text:"Laravel cookie name? (APP_KEY)",options:["APP_KEY","PHPSESSID","csrftoken","JSESSIONID"],answer:0,explanation:"Laravel sets APP_KEY for sessions."},
+      {text:"WordPress folder? (/wp-content/)",options:["/wp-content/","/static/","/laravel/","/media/"],answer:0,explanation:"Unique WP path."},
+      {text:"Lazy loading does?",options:["Defers image load","Preloads all assets","Inlines CSS","Bundling JS"],answer:0,explanation:"Loads as elements scroll into view."},
+      {text:"Code splitting does?",options:["Splits JS bundles","Compresses JS","Inline scripts","Merge modules"],answer:0,explanation:"Optimizes bundle size."},
+      {text:"Which compression? (Gzip/Brotli)",options:["Gzip/Brotli","SSL/TLS","DNS/Prefetch","GET/POST"],answer:0,explanation:"Reduces resource sizes."},
+      {text:"CDN stands for? (Content Delivery Network)",options:["Content Delivery Network","Central Data Node","Code Debugger Namespace","Client Data Nook"],answer:0,explanation:"Distributes content globally."}
+    ];
+
+    function shuffle(arr) {
+      let n = arr.length, temp, idx;
+      while (n) {
+        idx = Math.floor(Math.random() * n--);
+        temp = arr[n];
+        arr[n] = arr[idx];
+        arr[idx] = temp;
+      }
+      return arr;
+    }
+
+    const master = shuffle(pool).slice(0, 100);
+    const selected = shuffle(master).slice(0, 50);
+    let currentIndex = 0, score = 0;
+    const container = document.getElementById('quiz-container');
+    const progressEl = document.getElementById('progress');
+
+    function showProgress() {
+      progressEl.textContent = `Question ${currentIndex + 1} of ${selected.length}`;
+    }
+
+    function showQuestion() {
+      showProgress();
+      const q = selected[currentIndex];
+      container.innerHTML = `
+        <div class="question">
+          <p><strong>${q.text}</strong></p>
+          <ul class="options">
+            ${q.options.map((opt, i) => `<li><label><input type="radio" name="opt" value="${i}"> ${opt}</label></li>`).join('')}
+          </ul>
+          <button id="submitBtn">Submit</button>
+          <div id="feedback"></div>
+        </div>
+      `;
+      document.getElementById('submitBtn').onclick = checkAnswer;
+    }
+
+    function checkAnswer() {
+      const sel = document.querySelector('input[name="opt"]:checked'); if (!sel) return;
+      const q = selected[currentIndex]; const fb = document.getElementById('feedback'); const chosen = parseInt(sel.value);
+      if (chosen === q.answer) {
+        score++;
+        fb.innerHTML = `<p style="color: var(--correct-color);">Correct! ${q.explanation}</p>`;
+      } else {
+        fb.innerHTML = `<p style="color: var(--wrong-color);">Wrong. Correct answer: <strong>${q.options[q.answer]}</strong>. ${q.explanation}</p>`;
+      }
+      const btn = document.getElementById('submitBtn');
+      btn.textContent = currentIndex < selected.length - 1 ? 'Next' : 'Finish';
+      btn.onclick = nextQuestion;
+    }
+
+    function nextQuestion() {
+      currentIndex++;
+      if (currentIndex < selected.length) {
+        showQuestion();
+      } else {
+        container.innerHTML = `<div id="score">Your score: ${score} / ${selected.length}</div>`;
+        progressEl.textContent = '';
+      }
+    }
+
+    showQuestion();
+  </script>
+</body>
+</html>
+
